@@ -263,6 +263,52 @@ header h1 {
     border-radius: 2px;
 }
 
+/* New Chat Button */
+.new-chat-button {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.new-chat-button:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.new-chat-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.new-chat-button:active {
+    transform: translateY(0);
+}
+
+.new-chat-icon {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.new-chat-text {
+    font-size: 0.875rem;
+}
+
 /* Markdown formatting styles */
 .message-content h1,
 .message-content h2,

@@ -88,6 +88,15 @@ async def get_course_stats():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/new-session")
+async def create_new_session():
+    """Create a new chat session"""
+    try:
+        session_id = rag_system.session_manager.create_session()
+        return {"session_id": session_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.on_event("startup")
 async def startup_event():
     """Load initial documents on startup"""
