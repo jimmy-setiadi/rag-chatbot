@@ -12,6 +12,7 @@ This application is a full-stack web application that enables users to query cou
 - Python 3.13 or higher
 - uv (Python package manager)
 - An Anthropic API key (for Claude AI)
+- Node.js (for MCP Playwright server)
 - **For Windows**: Use Git Bash to run the application commands - [Download Git for Windows](https://git-scm.com/downloads/win)
 
 ## Installation
@@ -53,4 +54,34 @@ uv run uvicorn app:app --reload --port 8000
 The application will be available at:
 - Web Interface: `http://localhost:8000`
 - API Documentation: `http://localhost:8000/docs`
+
+## MCP Playwright Server
+
+This project includes an MCP (Model Context Protocol) server for browser automation using Playwright.
+
+### Quick Start MCP Server
+
+```bash
+# Direct npx command
+npx @modelcontextprotocol/server-playwright
+
+# Or using npm
+npm install
+npm run mcp
+
+# Or using provided scripts
+# Windows: start-mcp-playwright.bat
+# Unix/Linux: ./start-mcp-playwright.sh
+```
+
+See [README-MCP.md](README-MCP.md) for detailed MCP server documentation.
+
+## Features
+
+- **RAG System**: Semantic search with ChromaDB and Claude AI
+- **Clickable Source Links**: Direct links to lesson videos
+- **Session Management**: Conversation history and context
+- **New Chat Function**: Clear conversations and start fresh
+- **MCP Integration**: Browser automation capabilities
+- **Mock Server**: Testing without API credits
 

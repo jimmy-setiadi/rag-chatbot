@@ -65,7 +65,7 @@ async def mock_courses():
 async def create_new_session():
     """Create a new chat session"""
     import uuid
-    return {"session_id": f"mock-session-{uuid.uuid4().hex[:8]}"
+    return {"session_id": f"mock-session-{uuid.uuid4().hex[:8]}"}
 
 # Serve frontend
 try:
