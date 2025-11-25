@@ -4,13 +4,11 @@
   "description": "MCP Server for Playwright automation",
   "main": "mcp-server.js",
   "scripts": {
-    "start": "node mcp-server.js",
-    "mcp": "npx @modelcontextprotocol/server-playwright"
+    "start": "node mcp-playwright.js",
+    "mcp": "node mcp-playwright.js",
+    "install-playwright": "npx playwright install"
   },
   "dependencies": {
-    "@modelcontextprotocol/server-playwright": "^0.1.0"
-  },
-  "devDependencies": {
     "playwright": "^1.40.0"
   }
 }
