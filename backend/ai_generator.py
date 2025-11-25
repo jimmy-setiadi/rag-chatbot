@@ -10,7 +10,8 @@ class AIGenerator:
 Tool Usage:
 - **Course content questions**: Use search_course_content for specific course materials
 - **Course outline questions**: Use get_course_outline for course structure, lesson lists, or course overviews
-- **One tool call per query maximum**
+- **Sequential tool calls**: You can make multiple tool calls across rounds to gather comprehensive information
+- **Complex queries**: For multi-part questions or comparisons, gather information step by step
 - Synthesize results into accurate, fact-based responses
 - If tools yield no results, state this clearly without offering alternatives
 
@@ -19,9 +20,14 @@ For Course Outline Queries:
 - Format each lesson as: "Lesson [number]: [title]"
 - Include total lesson count
 
+Multi-Round Strategy:
+- If you need more information after seeing initial results, make another tool call
+- Use previous results to inform subsequent searches
+- Build comprehensive answers from multiple information sources
+
 Response Protocol:
 - **General knowledge questions**: Answer using existing knowledge without tools
-- **Course-specific questions**: Use appropriate tool first, then answer
+- **Course-specific questions**: Use appropriate tools to gather information
 - **No meta-commentary**:
  - Provide direct answers only — no reasoning process, tool explanations, or question-type analysis
  - Do not mention "based on the search results" or "using the tool"
@@ -86,81 +92,92 @@ Provide only the direct answer to what was asked.
         
         # Handle tool execution if needed
         if response.stop_reason == "tool_use" and tool_manager:
-            return self._handle_tool_execution(response, api_params, tool_manager)
+            return self._handle_sequential_tool_execution(response, api_params, tool_manager)
         
         # Return direct response
         return response.content[0].text
     
-    def _handle_tool_execution(self, initial_response, base_params: Dict[str, Any], tool_manager):
+    def _handle_sequential_tool_execution(self, initial_response, base_params: Dict[str, Any], tool_manager, max_rounds: int = 2):
         """
-        Handle execution of tool calls and get follow-up response.
+        Handle sequential tool execution across multiple API rounds.
         
         Args:
             initial_response: The response containing tool use requests
             base_params: Base API parameters
             tool_manager: Manager to execute tools
+            max_rounds: Maximum number of tool execution rounds
             
         Returns:
-            Final response text after tool execution
+            Final response text after all tool execution rounds
         """
         try:
-            print(f"Handling tool execution for {len(initial_response.content)} content blocks")
-            
-            # Start with existing messages
             messages = base_params["messages"].copy()
+            current_response = initial_response
             
-            # Add AI's tool use response
-            messages.append({"role": "assistant", "content": initial_response.content})
-            
-            # Execute all tool calls and collect results
-            tool_results = []
-            for content_block in initial_response.content:
-                if content_block.type == "tool_use":
-                    try:
-                        print(f"Executing tool: {content_block.name} with input: {content_block.input}")
-                        tool_result = tool_manager.execute_tool(
-                            content_block.name, 
-                            **content_block.input
-                        )
-                        print(f"Tool {content_block.name} executed successfully")
-                        
-                    except Exception as e:
-                        print(f"ERROR executing tool {content_block.name}: {e}")
-                        import traceback
-                        traceback.print_exc()
-                        tool_result = f"Tool execution failed: {str(e)}"
-                    
-                    tool_results.append({
-                        "type": "tool_result",
-                        "tool_use_id": content_block.id,
-                        "content": tool_result
-                    })
-            
-            # Add tool results as single message
-            if tool_results:
-                messages.append({"role": "user", "content": tool_results})
-            
-            # Prepare final API call without tools
-            final_params = {
-                **self.base_params,
-                "messages": messages,
-                "system": base_params["system"]
-            }
-            
-            # Get final response
-            try:
-                print("Making final API call to generate response")
-                final_response = self.client.messages.create(**final_params)
-                print("Final response received successfully")
-                return final_response.content[0].text
-            except Exception as e:
-                print(f"ERROR in final API call: {e}")
-                import traceback
-                traceback.print_exc()
-                return f"Final response generation failed: {str(e)}"
+            for round_num in range(1, max_rounds + 1):
+                print(f"Starting tool execution round {round_num}")
                 
+                # Check if current response has tool use
+                if current_response.stop_reason != "tool_use":
+                    print(f"No tool use in round {round_num}, returning response")
+                    return current_response.content[0].text
+                
+                # Add AI's tool use response to messages
+                messages.append({"role": "assistant", "content": current_response.content})
+                
+                # Execute tools and collect results
+                tool_results = []
+                for content_block in current_response.content:
+                    if content_block.type == "tool_use":
+                        try:
+                            print(f"Round {round_num}: Executing tool {content_block.name}")
+                            tool_result = tool_manager.execute_tool(
+                                content_block.name, 
+                                **content_block.input
+                            )
+                            print(f"Round {round_num}: Tool {content_block.name} executed successfully")
+                            
+                        except Exception as e:
+                            print(f"ERROR in round {round_num} executing tool {content_block.name}: {e}")
+                            tool_result = f"Tool execution failed: {str(e)}"
+                        
+                        tool_results.append({
+                            "type": "tool_result",
+                            "tool_use_id": content_block.id,
+                            "content": tool_result
+                        })
+                
+                # Add tool results to messages
+                if tool_results:
+                    messages.append({"role": "user", "content": tool_results})
+                
+                # Prepare next API call
+                next_params = {
+                    **self.base_params,
+                    "messages": messages,
+                    "system": base_params["system"]
+                }
+                
+                # Add tools for all rounds except the last
+                if round_num < max_rounds and "tools" in base_params:
+                    next_params["tools"] = base_params["tools"]
+                    next_params["tool_choice"] = {"type": "auto"}
+                
+                # Make next API call
+                try:
+                    print(f"Making API call for round {round_num}")
+                    current_response = self.client.messages.create(**next_params)
+                    print(f"Round {round_num} response received")
+                except Exception as e:
+                    print(f"ERROR in round {round_num} API call: {e}")
+                    return f"API call failed in round {round_num}: {str(e)}"
+            
+            # Return final response after max rounds
+            print(f"Completed {max_rounds} rounds, returning final response")
+            return current_response.content[0].text
+            
         except Exception as e:
-            print(f"ERROR in tool execution handling: {e}")
+            print(f"ERROR in sequential tool execution: {e}")
             import traceback
             traceback.print_exc()
-            return f"Tool execution handling failed: {str(e)}"
+            return f"Sequential tool execution failed: {str(e)}"
