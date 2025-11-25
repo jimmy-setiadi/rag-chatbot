@@ -103,38 +103,64 @@ Provide only the direct answer to what was asked.
         Returns:
             Final response text after tool execution
         """
-        # Start with existing messages
-        messages = base_params["messages"].copy()
-        
-        # Add AI's tool use response
-        messages.append({"role": "assistant", "content": initial_response.content})
-        
-        # Execute all tool calls and collect results
-        tool_results = []
-        for content_block in initial_response.content:
-            if content_block.type == "tool_use":
-                tool_result = tool_manager.execute_tool(
-                    content_block.name, 
-                    **content_block.input
-                )
+        try:
+            print(f"Handling tool execution for {len(initial_response.content)} content blocks")
+            
+            # Start with existing messages
+            messages = base_params["messages"].copy()
+            
+            # Add AI's tool use response
+            messages.append({"role": "assistant", "content": initial_response.content})
+            
+            # Execute all tool calls and collect results
+            tool_results = []
+            for content_block in initial_response.content:
+                if content_block.type == "tool_use":
+                    try:
+                        print(f"Executing tool: {content_block.name} with input: {content_block.input}")
+                        tool_result = tool_manager.execute_tool(
+                            content_block.name, 
+                            **content_block.input
+                        )
+                        print(f"Tool {content_block.name} executed successfully")
+                        
+                    except Exception as e:
+                        print(f"ERROR executing tool {content_block.name}: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        tool_result = f"Tool execution failed: {str(e)}"
+                    
+                    tool_results.append({
+                        "type": "tool_result",
+                        "tool_use_id": content_block.id,
+                        "content": tool_result
+                    })
+            
+            # Add tool results as single message
+            if tool_results:
+                messages.append({"role": "user", "content": tool_results})
+            
+            # Prepare final API call without tools
+            final_params = {
+                **self.base_params,
+                "messages": messages,
+                "system": base_params["system"]
+            }
+            
+            # Get final response
+            try:
+                print("Making final API call to generate response")
+                final_response = self.client.messages.create(**final_params)
+                print("Final response received successfully")
+                return final_response.content[0].text
+            except Exception as e:
+                print(f"ERROR in final API call: {e}")
+                import traceback
+                traceback.print_exc()
+                return f"Final response generation failed: {str(e)}"
                 
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": content_block.id,
-                    "content": tool_result
-                })
-        
-        # Add tool results as single message
-        if tool_results:
-            messages.append({"role": "user", "content": tool_results})
-        
-        # Prepare final API call without tools
-        final_params = {
-            **self.base_params,
-            "messages": messages,
-            "system": base_params["system"]
-        }
-        
-        # Get final response
-        final_response = self.client.messages.create(**final_params)
-        return final_response.content[0].text
+        except Exception as e:
+            print(f"ERROR in tool execution handling: {e}")
+            import traceback
+            traceback.print_exc()
+            return f"Tool execution handling failed: {str(e)}"
