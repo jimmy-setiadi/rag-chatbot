@@ -3,9 +3,10 @@ const API_URL = '/api';
 
 // Global state
 let currentSessionId = null;
+let availableCommands = {};
 
 // DOM elements
-let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton;
+let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton, commandSuggestions;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     createNewSession();
     loadCourseStats();
+    loadAvailableCommands();
 });
 
 // Event Listeners
@@ -27,7 +29,16 @@ function setupEventListeners() {
     // Chat functionality
     sendButton.addEventListener('click', sendMessage);
     chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
+        if (e.key === 'Enter') {
+            hideCommandSuggestions();
+            sendMessage();
+        }
+    });
+    
+    // Command autocomplete
+    chatInput.addEventListener('input', handleInputChange);
+    chatInput.addEventListener('blur', () => {
+        setTimeout(hideCommandSuggestions, 200);
     });
     
     // New chat button
@@ -163,7 +174,7 @@ function escapeHtml(text) {
 async function createNewSession() {
     currentSessionId = null;
     chatMessages.innerHTML = '';
-    addMessage('Welcome to the Course Materials Assistant! I can help you with questions about courses, lessons and specific content. What would you like to know?', 'assistant', null, true);
+    addMessage('Welcome to the Course Materials Assistant! I can help you with questions about courses, lessons and specific content.\n\nYou can also use slash commands like:\n- `/search-course` - Search for specific content\n- `/get-outline` - Get course structure\n- `/compare-courses` - Compare different courses\n\nWhat would you like to know?', 'assistant', null, true);
 }
 
 async function startNewChat() {
@@ -199,7 +210,7 @@ async function startNewChat() {
     sendButton.disabled = false;
     
     // Add welcome message
-    addMessage('Welcome to the Course Materials Assistant! I can help you with questions about courses, lessons and specific content. What would you like to know?', 'assistant', null, true);
+    addMessage('Welcome to the Course Materials Assistant! I can help you with questions about courses, lessons and specific content.\n\nYou can also use slash commands like:\n- `/search-course` - Search for specific content\n- `/get-outline` - Get course structure\n- `/compare-courses` - Compare different courses\n\nWhat would you like to know?', 'assistant', null, true);
     
     // Focus on input
     chatInput.focus();
@@ -240,5 +251,70 @@ async function loadCourseStats() {
         if (courseTitles) {
             courseTitles.innerHTML = '<span class="error">Failed to load courses</span>';
         }
+    }
+}
+
+// Command Functions
+async function loadAvailableCommands() {
+    try {
+        const response = await fetch(`${API_URL}/commands`);
+        if (response.ok) {
+            const data = await response.json();
+            availableCommands = data.commands;
+        }
+    } catch (error) {
+        console.error('Error loading commands:', error);
+    }
+}
+
+function handleInputChange() {
+    const value = chatInput.value;
+    
+    if (value.startsWith('/')) {
+        showCommandSuggestions(value);
+    } else {
+        hideCommandSuggestions();
+    }
+}
+
+function showCommandSuggestions(input) {
+    const query = input.slice(1).toLowerCase();
+    const matches = Object.keys(availableCommands).filter(cmd => 
+        cmd.toLowerCase().includes(query)
+    );
+    
+    if (matches.length === 0) {
+        hideCommandSuggestions();
+        return;
+    }
+    
+    if (!commandSuggestions) {
+        commandSuggestions = document.createElement('div');
+        commandSuggestions.className = 'command-suggestions';
+        chatInput.parentNode.appendChild(commandSuggestions);
+    }
+    
+    commandSuggestions.innerHTML = matches.map(cmd => 
+        `<div class="command-item" data-command="${cmd}">
+            <span class="command-name">/${cmd}</span>
+            <span class="command-desc">${availableCommands[cmd]}</span>
+        </div>`
+    ).join('');
+    
+    commandSuggestions.querySelectorAll('.command-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const command = item.dataset.command;
+            chatInput.value = `/${command} `;
+            chatInput.focus();
+            hideCommandSuggestions();
+        });
+    });
+    
+    commandSuggestions.style.display = 'block';
+}
+
+function hideCommandSuggestions() {
+    if (commandSuggestions) {
+        commandSuggestions.style.display = 'none';
     }
 }

@@ -51,6 +51,10 @@ class CourseStats(BaseModel):
     total_courses: int
     course_titles: List[str]
 
+class CommandsResponse(BaseModel):
+    """Response model for available commands"""
+    commands: Dict[str, str]
+
 # API Endpoints
 
 @app.post("/api/query", response_model=QueryResponse)
@@ -94,6 +98,15 @@ async def create_new_session():
     try:
         session_id = rag_system.session_manager.create_session()
         return {"session_id": session_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/commands")
+async def get_available_commands():
+    """Get available slash commands"""
+    try:
+        commands = rag_system.get_available_commands()
+        return {"commands": commands}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -5,6 +5,7 @@ from vector_store import VectorStore
 from ai_generator import AIGenerator
 from session_manager import SessionManager
 from search_tools import ToolManager, CourseSearchTool, CourseOutlineTool
+from command_processor import CommandProcessor
 from models import Course, Lesson, CourseChunk
 
 class RAGSystem:
@@ -25,6 +26,9 @@ class RAGSystem:
         self.outline_tool = CourseOutlineTool(self.vector_store)
         self.tool_manager.register_tool(self.search_tool)
         self.tool_manager.register_tool(self.outline_tool)
+        
+        # Initialize command processor
+        self.command_processor = CommandProcessor()
     
     def add_course_document(self, file_path: str) -> Tuple[Course, int]:
         """
@@ -115,8 +119,19 @@ class RAGSystem:
         try:
             print(f"RAG query started: {query[:50]}...")
             
-            # Create prompt for the AI with clear instructions
-            prompt = f"""Answer this question about course materials: {query}"""
+            # Check if this is a slash command
+            if self.command_processor.is_command(query):
+                print("Processing slash command")
+                processed_command = self.command_processor.process_command(query)
+                if processed_command:
+                    prompt = processed_command
+                    print(f"Command processed: {query}")
+                else:
+                    prompt = f"""Answer this question about course materials: {query}"""
+                    print("Unknown command, treating as regular query")
+            else:
+                # Create prompt for the AI with clear instructions
+                prompt = f"""Answer this question about course materials: {query}"""
             
             # Get conversation history if session exists
             history = None
@@ -191,3 +206,7 @@ class RAGSystem:
             "total_courses": self.vector_store.get_course_count(),
             "course_titles": self.vector_store.get_existing_course_titles()
         }
+    
+    def get_available_commands(self) -> Dict[str, str]:
+        """Get available slash commands"""
+        return self.command_processor.get_available_commands()
