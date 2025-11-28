@@ -1,25 +1,27 @@
+import os
 import warnings
-warnings.filterwarnings("ignore", message="resource_tracker: There appear to be.*")
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import List, Optional, Union, Dict, Any
-import os
 
 from config import config
 from rag_system import RAGSystem
+
+warnings.filterwarnings(
+    "ignore", message="resource_tracker: There appear to be.*"
+)
 
 # Initialize FastAPI app
 app = FastAPI(title="Course Materials RAG System", root_path="")
 
 # Add trusted host middleware for proxy
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=["*"]
-)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
 # Enable CORS with proper settings for proxy
 app.add_middleware(
@@ -70,9 +72,7 @@ async def query_documents(request: QueryRequest):
         answer, sources = rag_system.query(request.query, session_id)
         
         return QueryResponse(
-            answer=answer,
-            sources=sources,
-            session_id=session_id
+            answer=answer, sources=sources, session_id=session_id
         )
     except Exception as e:
         import traceback
@@ -87,7 +87,7 @@ async def get_course_stats():
         analytics = rag_system.get_course_analytics()
         return CourseStats(
             total_courses=analytics["total_courses"],
-            course_titles=analytics["course_titles"]
+            course_titles=analytics["course_titles"],
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -117,28 +117,26 @@ async def startup_event():
     if os.path.exists(docs_path):
         print("Loading initial documents...")
         try:
-            courses, chunks = rag_system.add_course_folder(docs_path, clear_existing=False)
+            courses, chunks = rag_system.add_course_folder(
+                docs_path, clear_existing=False
+            )
             print(f"Loaded {courses} courses with {chunks} chunks")
         except Exception as e:
             print(f"Error loading documents: {e}")
 
 # Custom static file handler with no-cache headers for development
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-import os
-from pathlib import Path
-
-
 class DevStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope):
         response = await super().get_response(path, scope)
         if isinstance(response, FileResponse):
             # Add no-cache headers for development
-            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            response.headers[
+                "Cache-Control"
+            ] = "no-cache, no-store, must-revalidate"
             response.headers["Pragma"] = "no-cache"
             response.headers["Expires"] = "0"
         return response
-    
-    
+
+
 # Serve static files for the frontend
 app.mount("/", StaticFiles(directory="../frontend", html=True), name="static")

@@ -5,11 +5,13 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import pytest
 import unittest
 from unittest.mock import Mock, patch, MagicMock
 from config import config
 from rag_system import RAGSystem
 
+@pytest.mark.integration
 class TestRAGSystemIntegration(unittest.TestCase):
     
     def setUp(self):
