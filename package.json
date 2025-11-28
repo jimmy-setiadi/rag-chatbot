@@ -1,0 +1,14 @@
+{
+  "name": "ragchatbot-mcp-playwright",
+  "version": "1.0.0",
+  "description": "MCP Server for Playwright automation",
+  "main": "mcp-server.js",
+  "scripts": {
+    "start": "node mcp-playwright.js",
+    "mcp": "node mcp-playwright.js",
+    "install-playwright": "npx playwright install"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  }
+}

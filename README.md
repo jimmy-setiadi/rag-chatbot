@@ -1,2 +1,87 @@
-# rag-chatbot
-Course materials Q&amp;A RAG system: FastAPI backend with ChromaDB vector store, Anthropic Claude LLM, semantic search, session management, MCP Playwright integration, and GitHub Actions workflow for automated Amazon Q SAST/code quality reviews.
+# Course Materials RAG System
+
+A Retrieval-Augmented Generation (RAG) system designed to answer questions about course materials using semantic search and AI-powered responses.
+
+## Overview
+
+This application is a full-stack web application that enables users to query course materials and receive intelligent, context-aware responses. It uses ChromaDB for vector storage, Anthropic's Claude for AI generation, and provides a web interface for interaction.
+
+
+## Prerequisites
+
+- Python 3.13 or higher
+- uv (Python package manager)
+- An Anthropic API key (for Claude AI)
+- Node.js (for MCP Playwright server)
+- **For Windows**: Use Git Bash to run the application commands - [Download Git for Windows](https://git-scm.com/downloads/win)
+
+## Installation
+
+1. **Install uv** (if not already installed)
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+2. **Install Python dependencies**
+   ```bash
+   uv sync
+   ```
+
+3. **Set up environment variables**
+   
+   Create a `.env` file in the root directory:
+   ```bash
+   ANTHROPIC_API_KEY=your_anthropic_api_key_here
+   ```
+
+## Running the Application
+
+### Quick Start
+
+Use the provided shell script:
+```bash
+chmod +x run.sh
+./run.sh
+```
+
+### Manual Start
+
+```bash
+cd backend
+uv run uvicorn app:app --reload --port 8000
+```
+
+The application will be available at:
+- Web Interface: `http://localhost:8000`
+- API Documentation: `http://localhost:8000/docs`
+
+## MCP Playwright Server
+
+This project includes an MCP (Model Context Protocol) server for browser automation using Playwright.
+
+### Quick Start MCP Server
+
+```bash
+# Direct npx command
+npx @modelcontextprotocol/server-playwright
+
+# Or using npm
+npm install
+npm run mcp
+
+# Or using provided scripts
+# Windows: start-mcp-playwright.bat
+# Unix/Linux: ./start-mcp-playwright.sh
+```
+
+See [README-MCP.md](README-MCP.md) for detailed MCP server documentation.
+
+## Features
+
+- **RAG System**: Semantic search with ChromaDB and Claude AI
+- **Clickable Source Links**: Direct links to lesson videos
+- **Session Management**: Conversation history and context
+- **New Chat Function**: Clear conversations and start fresh
+- **MCP Integration**: Browser automation capabilities
+- **Mock Server**: Testing without API credits
+- **GitHub Integration**: Automated code reviews with Amazon Q

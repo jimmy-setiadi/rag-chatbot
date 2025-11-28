@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Clickable Sources</title>
+    <link rel="stylesheet" href="frontend/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <main class="chat-main">
+                <div class="chat-container">
+                    <div id="chatMessages" class="chat-messages">
+                        <!-- Test message with clickable sources -->
+                        <div class="message assistant">
+                            <div class="message-content">
+                                <p>This is a test response about lesson content. The sources below should be clickable links.</p>
+                            </div>
+                            <details class="sources-collapsible" open>
+                                <summary class="sources-header">Sources</summary>
+                                <div class="sources-content">
+                                    <a href="https://learn.deeplearning.ai/courses/building-toward-computer-use-with-anthropic/lesson/zrgb6/multimodal-requests" target="_blank" rel="noopener noreferrer">Building Towards Computer Use - Lesson 3</a>, 
+                                    <a href="https://learn.deeplearning.ai/courses/building-toward-computer-use-with-anthropic/lesson/gi7jq/overview" target="_blank" rel="noopener noreferrer">MCP Course - Lesson 1</a>, 
+                                    Some Course - No Link Available
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        console.log('Test page loaded. Check that source links are clickable and styled correctly.');
+    </script>
+</body>
+</html>
