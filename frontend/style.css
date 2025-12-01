@@ -72,10 +72,7 @@ body {
 
 /* Header */
 header {
-    padding: 1rem 2rem;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
+    display: none;
 }
 
 .header-content {
@@ -501,9 +498,11 @@ header h1 {
     color: var(--text-secondary);
 }
 
-/* Theme Toggle Button */
+/* Theme Toggle Button - Positioned absolutely in top-right */
 .theme-toggle {
-    position: relative;
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
     width: 48px;
     height: 48px;
     background: var(--background);
@@ -515,6 +514,7 @@ header h1 {
     justify-content: center;
     transition: all 0.3s ease;
     overflow: hidden;
+    z-index: 1000;
 }
 
 .theme-toggle:hover {
